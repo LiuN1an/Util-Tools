@@ -3,6 +3,10 @@ import { middleware } from "./core";
 
 middleware.addComp({ name: "login", component: Login });
 
+export interface LoginProps {
+  logout: () => void;
+}
+
 const io = {
   name: "logout",
   pipe: async () => {
