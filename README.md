@@ -1,5 +1,5 @@
 # split-components
-Split components' development work into pure developers and dataIO developers.
+Split components' development work into pure developers and dataIO developers. If you control the props of a component, you can control the lifecycle of components in your project. Even you can employee another one to write components following your rules.
 
 ## Why use
 Actually, it's a mini-runtime, if you want to limit developers to create controlled components, you can use it.
