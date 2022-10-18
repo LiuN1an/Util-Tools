@@ -1,5 +1,5 @@
 # split-components
-Create a middleware to split components for some extra props which could be defined separately of props
+Split components' development work into pure developers and dataIO developers.
 
 ## Why use
 Actually, it's a mini-runtime, if you want to limit developers to create controlled components, you can use it.
