@@ -7,3 +7,7 @@ Actually, it's a mini-runtime, if you want to limit developers to create control
 Following the `register.ts`, you can see that we use the single instance of `middleware` to register some components and props, then we can render it in normal react components in our business, don't worry, it has been wrapped by memo.
 
 Then, we could split the work from component's developer, we can add a dev character called DataIOer, they are professional to specify which props components could get, one component is mapped to one dataIO unless there have duplicate names.
+
+### Request Wrapper
+
+Wrap post and get function with mock registerization
