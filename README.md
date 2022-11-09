@@ -1,7 +1,10 @@
-# split-components
+# Util tools
+
+
+### split-components
 Split components' development work into pure developers and dataIO developers. If you control the props of a component, you can control the lifecycle of components in your project. Even you can employee another one to write components following your rules.
 
-## Why use
+#### Why use
 Actually, it's a mini-runtime, if you want to limit developers to create controlled components, you can use it.
 
 Following the `register.ts`, you can see that we use the single instance of `middleware` to register some components and props, then we can render it in normal react components in our business, don't worry, it has been wrapped by memo.
