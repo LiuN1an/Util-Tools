@@ -1,4 +1,4 @@
-import { useForm } from "form-hooks";
+import { useForm } from "./index";
 import React from "react";
 
 export const FormExample = (props: { initValue: any }) => {

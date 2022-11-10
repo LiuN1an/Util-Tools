@@ -1,27 +1,33 @@
 {
     "compilerOptions": {
-        "experimentalDecorators": true,
-        "outDir": "./dist",
-        // "noImplicitAny": true,
+        "outDir": "./es",
         "module": "esnext",
         "target": "esnext",
         "moduleResolution": "node",
+        "skipLibCheck": true,
+        "declaration": true,
+        "emitDeclarationOnly": true,
         "jsx": "react",
-        "lib": [
-            "ES6",
-            "DOM",
-            "ESNext"
-        ],
-        "resolveJsonModule": true,
         "esModuleInterop": true,
         "isolatedModules": true,
+        "experimentalDecorators": true,
         "baseUrl": ".",
+        "rootDirs": [
+            "./src",
+            "./types"
+        ],
+        "rootDir": "./src",
         "typeRoots": [
             "./node_modules/@types",
-            "./src/types"
+            "./types"
         ]
     },
+    "include": [
+        "src/**/*",
+        "types"
+    ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist",
     ]
 }
