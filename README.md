@@ -19,6 +19,8 @@ Wrap post and get function with mock registerization
 
 You could use a hook to get a complete form model, even you are face with an array format
 
-### Hook of tailwind fade
-
+### Hooks
+#### tailwind fade
 To control starting and ending of animation easily
+#### Responsive grid component
+It could be responsive to parent container's size changed, fixed width and height element will be ordered with animation
