@@ -1,12 +1,6 @@
-import React, {
-  ComponentType,
-  FC,
-  ReactElement,
-  ReactNode,
-  useEffect,
-  useState,
-} from "react";
-import { createRoot, unmountComponentAtNode } from "react-dom";
+import React, { FC, ReactNode, useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { CallModalProps, CreateCoverProps, options } from "./modal-common";
 import classnames from "classnames";
 
 export const useTailWindFade = (option: { open: boolean }) => {
@@ -49,43 +43,31 @@ export const createEscape = (props: {
   const escapeNode = document.createElement("div");
   const body = document.getElementById("__next");
   body.appendChild(escapeNode);
+  let root: any;
   const onClose = () => {
-    unmountComponentAtNode(escapeNode);
+    root.unmount();
     if (body.contains(escapeNode)) {
       body.removeChild(escapeNode);
     }
   };
   const Child = render({ onClose });
-  createRoot(escapeNode).render(<>{Child}</>);
-};
-
-export interface BaseModalProps {
-  onClose?: () => void;
-}
-
-export interface ConfirmModalProps {
-  type: "confirm";
-  onCancel?: () => Promise<boolean | undefined>;
-  onOk?: () => Promise<boolean | undefined>;
-}
-
-export type CreateCoverProps = {
-  isCoverClose?: boolean;
-  render?: ComponentType<BaseModalProps>;
-  onClose?: () => void;
+  root = createRoot(escapeNode);
+  root.render(<>{Child}</>);
 };
 
 export const CreateCover: FC<CreateCoverProps> = ({
+  type,
   isCoverClose = true,
   render: Render,
   onClose,
+  width,
+  height,
   ...rest
 }) => {
   const { style: coverStyle, setOpen: setCoverOpen } = useTailWindFade({
     open: true,
   });
   const { style, setOpen } = useTailWindFade({ open: true });
-
   return (
     <>
       <div
@@ -107,9 +89,10 @@ export const CreateCover: FC<CreateCoverProps> = ({
         }}
       />
       <div
+        style={{ width: width, height: height }}
         className={classnames(
           ...style(
-            "fixed left-1/2 top-1/3 -translate-x-1/2  w-1/3 h-1/4 bg-white rounded-lg",
+            "fixed left-1/2 top-1/3 -translate-x-1/2 bg-white rounded-lg",
             "-translate-y-1/2 opacity-0 pointer-events-none",
             "-translate-y-1/3"
           )
@@ -125,6 +108,8 @@ export const CreateCover: FC<CreateCoverProps> = ({
                 onClose?.();
               }, 300);
             }}
+            width={width}
+            height={height}
           />
         )}
       </div>
@@ -132,53 +117,23 @@ export const CreateCover: FC<CreateCoverProps> = ({
   );
 };
 
-const Confirm: FC<Omit<ConfirmModalProps, "type"> & BaseModalProps> = ({
-  onClose,
-  onCancel,
-  onOk,
-}) => {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1"></div>
-      <div className="p-3 h-12 flex items-center justify-end gap-2">
-        <button onClick={() => onClose?.()}>Cancel</button>
-        <button
-          onClick={async () => {
-            if (await onOk?.()) {
-              onClose?.();
-            }
-          }}
-        >
-          Ok
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export type CallModalProps = (ConfirmModalProps | { type: "image" }) & {
-  onClose?: () => void;
-};
-
 export const callModal = (props: CallModalProps) => {
-  const { type, onClose, ...rest } = props;
+  const { type, onClose } = props;
 
-  const render = () => {
-    if (type === "confirm") {
-      return Confirm as ComponentType<BaseModalProps>;
-    }
-  };
+  const { component, width, height } = options(type);
 
   createEscape({
     render: ({ onClose: onDestroy }) => {
       return (
         <CreateCover
+          {...props}
           onClose={() => {
             onClose?.();
             onDestroy();
           }}
-          render={render()}
-          {...rest}
+          render={component}
+          width={width}
+          height={height}
         />
       );
     },
