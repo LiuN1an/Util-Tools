@@ -24,3 +24,6 @@ You could use a hook to get a complete form model, even you are face with an arr
 To control starting and ending of animation easily
 #### Responsive grid component
 It could be responsive to parent container's size changed, fixed width and height element will be ordered with animation
+#### callModal
+Imperative method to call a modal instead of declarative method.
+You can extend modal using `props: type` and use it in your project everywhere
