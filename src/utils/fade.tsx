@@ -22,14 +22,20 @@ export const useTailWindFade = (option: { open: boolean }) => {
   }, [open]);
 
   return {
-    style: (common: string, leave: string, enter: string) => {
+    className: (common: string, leave: string, enter: string) => {
       return [
-        "duration-300 transition-all z-10",
-        option,
+        "duration-300 transition-all z-[999]",
         common,
         open ? "block" : "none",
         isEnter ? enter : leave,
       ];
+    },
+    style: (
+      common: React.CSSProperties,
+      leave: React.CSSProperties = {},
+      enter: React.CSSProperties = {}
+    ) => {
+      return Object.assign(common, isEnter ? enter : leave);
     },
     open,
     setOpen,
@@ -64,10 +70,12 @@ export const CreateCover: FC<CreateCoverProps> = ({
   height,
   ...rest
 }) => {
-  const { style: coverStyle, setOpen: setCoverOpen } = useTailWindFade({
-    open: true,
-  });
-  const { style, setOpen } = useTailWindFade({ open: true });
+  const { className: coverStyle, setOpen: setCoverOpen } = useTailWindFade(
+    {
+      open: true,
+    }
+  );
+  const { className, setOpen } = useTailWindFade({ open: true });
   return (
     <>
       <div
@@ -91,7 +99,7 @@ export const CreateCover: FC<CreateCoverProps> = ({
       <div
         style={{ width: width, height: height }}
         className={classnames(
-          ...style(
+          ...className(
             "fixed left-1/2 top-1/3 -translate-x-1/2 bg-white rounded-lg",
             "-translate-y-1/2 opacity-0 pointer-events-none",
             "-translate-y-1/3"
