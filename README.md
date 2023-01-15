@@ -31,3 +31,6 @@ You can extend modal using `props: type` and use it in your project everywhere
 It is used in pagination when scrolling
 ### Moved Wrapper Component
 A component could be moved 
+#### CallDropdown
+Imperative method to call a dropdown instead of declarative method.
+You can pass the `HTMLElement` and get a auto positioned dropdown modal
