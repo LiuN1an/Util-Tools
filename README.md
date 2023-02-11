@@ -34,3 +34,5 @@ A component could be moved
 #### CallDropdown
 Imperative method to call a dropdown instead of declarative method.
 You can pass the `HTMLElement` and get a auto positioned dropdown modal
+#### Cache Request
+A Simple SWR, it can cache last response for specify request.
