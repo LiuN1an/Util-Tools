@@ -18,8 +18,10 @@ export type CreateDropDownProps = DropDownProps & {
 
 export interface DropDownProps {
   dom: HTMLElement;
-  align?: "left" | "right" | "center";
-  content: ComponentType<{ onClose: () => void }>;
+  align?: "left" | "right" | "center" | "top";
+  content: ComponentType<{ onClose: () => void; isMobile?: boolean }>;
+  overlayClickDisable?: boolean;
+  disableMobile?: boolean;
 }
 
 export const CreateDropDown: FC<CreateDropDownProps> = ({
@@ -30,7 +32,10 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
   modalClass,
   leaveAnimate,
   enterAnimate,
+  overlayClickDisable = false,
+  disableMobile = false,
 }) => {
+  const isMobile = true;
   const containerRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect>(undefined);
   const { className, style, setOpen } = useTailWindFade({ open: true });
@@ -44,7 +49,7 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current) {
+      if (containerRef.current && !overlayClickDisable) {
         const { x, y } = e;
         const _rect = containerRef.current.getBoundingClientRect();
         if (
@@ -75,19 +80,26 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
     if (containerRef.current) {
       const { width, height } =
         containerRef.current.getBoundingClientRect();
-      const viewWidth = document.body.offsetWidth;
+      const viewWidth = document.body.offsetWidth - 20;
       // default: width > rect.width
       const moveValue = (width - rect.width) / 2;
+      let top = 0;
+      if (align === "top") {
+        top = rect.top - height - 10;
+      } else {
+        top = rect.top + rect.height + 10;
+      }
+
       if (moveValue + rect.right > viewWidth) {
         return {
           left: viewWidth - width,
-          top: rect.top + rect.height,
+          top,
         };
       }
       return {
         // TODO: 左对齐时存在border宽度问题
         left: align === "left" ? rect.left : rect.left - moveValue,
-        top: rect.top + rect.height + 10,
+        top,
       };
     }
     return undefined;
@@ -102,8 +114,16 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
       style={style({
         zIndex: 9999,
         position: "absolute",
-        left: `${calc?.left ? calc.left : 0}px`,
-        top: `${calc?.top ? calc.top : 0}px`,
+        ...(isMobile && !disableMobile
+          ? {
+              width: "100%",
+              left: "0px",
+              ...(align === "top" ? { top: "0px" } : { bottom: "0px" }),
+            }
+          : {
+              left: `${calc?.left ? calc.left : 0}px`,
+              top: `${calc?.top ? calc.top : 0}px`,
+            }),
       })}
       ref={containerRef}
     >
