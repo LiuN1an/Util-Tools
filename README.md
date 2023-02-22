@@ -46,7 +46,7 @@ A component could be moved
 #### CallDropdown
 
 Imperative method to call a dropdown instead of declarative method.
-You can pass the `HTMLElement` and get a auto positioned dropdown modal
+You can pass the `HTMLElement` and get a auto positioned dropdown modal. And it will match the mobile page
 
 #### Cache Request
 
