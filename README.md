@@ -35,11 +35,11 @@ It could be responsive to parent container's size changed, fixed width and heigh
 Imperative method to call a modal instead of declarative method.
 You can extend modal using `props: type` and use it in your project everywhere
 
-### Observer when to execute action
+#### Observer when to execute action
 
 It is used in pagination when scrolling
 
-### Moved Wrapper Component
+#### Moved Wrapper Component
 
 A component could be moved
 
