@@ -16,7 +16,7 @@ Then, we could split the work from component's developer, we can add a dev chara
 
 Wrap post and get function with mock registerization
 
-### Hook of Form data model with states and reducer
+### useForm
 
 You could use a hook to get a complete form model, even you are face with an array format
 
