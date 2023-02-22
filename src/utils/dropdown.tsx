@@ -39,6 +39,9 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect>(undefined);
   const { className, style, setOpen } = useTailWindFade({ open: true });
+  const [calc, setCalc] = useState<{ left: number; top: number }>(
+    undefined
+  );
 
   useEffect(() => {
     if (dom) {
@@ -73,37 +76,41 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
     };
   }, [onClose, containerRef]);
 
-  /**
-   * 目前默认弹框在底部
-   */
-  const calc = useMemo(() => {
-    if (containerRef.current) {
-      const { width, height } =
-        containerRef.current.getBoundingClientRect();
-      const viewWidth = document.body.offsetWidth - 20;
-      // default: width > rect.width
-      const moveValue = (width - rect.width) / 2;
-      let top = 0;
-      if (align === "top") {
-        top = rect.top - height - 10;
-      } else {
-        top = rect.top + rect.height + 10;
-      }
+  useEffect(() => {
+    const dom = containerRef.current;
+    setTimeout(() => {
+      if (dom) {
+        const { width, height } = dom.getBoundingClientRect();
+        const viewWidth = document.body.offsetWidth - 20;
+        // default: width > rect.width
+        const moveValue = (width - rect.width) / 2;
+        let top = 0;
+        if (align === "top") {
+          top = rect.top - height - 10;
+        } else {
+          top = rect.top + rect.height + 10;
+        }
 
-      if (moveValue + rect.right > viewWidth) {
-        return {
-          left: viewWidth - width,
-          top,
-        };
+        if (moveValue + rect.right > viewWidth) {
+          setCalc({
+            left: viewWidth - width,
+            top,
+          });
+        } else {
+          setCalc({
+            // TODO: 左对齐时存在border宽度问题
+            left: align === "left" ? rect.left : rect.left - moveValue,
+            top,
+          });
+        }
       }
-      return {
-        // TODO: 左对齐时存在border宽度问题
-        left: align === "left" ? rect.left : rect.left - moveValue,
-        top,
-      };
-    }
-    return undefined;
-  }, [containerRef.current, rect, align]);
+    }, 0);
+  }, [containerRef.current]);
+
+  const mobileEnv = useMemo(
+    () => isMobile && !disableMobile,
+    [isMobile, disableMobile]
+  );
 
   if (!rect) {
     return null;
@@ -113,8 +120,9 @@ export const CreateDropDown: FC<CreateDropDownProps> = ({
     <div
       style={style({
         zIndex: 9999,
+        visibility: Boolean(calc) || mobileEnv ? "visible" : "hidden",
         position: "absolute",
-        ...(isMobile && !disableMobile
+        ...(mobileEnv
           ? {
               width: "100%",
               left: "0px",
