@@ -20,22 +20,20 @@ Wrap post and get function with mock registerization
 
 You could use a hook to get a complete form model, even you are face with an array format
 
-### Hooks
-
-#### tailwind fade
+### tailwind fade
 
 To control starting and ending of animation easily
 
-#### Responsive grid component
+### Responsive grid component
 
 It could be responsive to parent container's size changed, fixed width and height element will be ordered with animation
 
-#### CallModal
+### CallModal
 
 Imperative method to call a modal instead of declarative method.
 You can extend modal using `props: type` and use it in your project everywhere
 
-#### Observer when to execute action
+### Observer when to execute action
 
 It is used in pagination when scrolling
 
@@ -43,15 +41,15 @@ It is used in pagination when scrolling
 
 A component could be moved
 
-#### CallDropdown
+### CallDropdown
 
 Imperative method to call a dropdown instead of declarative method.
 You can pass the `HTMLElement` and get a auto positioned dropdown modal. And it will match the mobile page
 
-#### Cache Request
+### Cache Request
 
 A Simple SWR, it can cache last response for specify request.
 
-#### Progress Container
+### Progress Container
 
 This is a container for managing progress of any activity, and any caller can register and subscribe to any 'progress source' corresponding to a key.
