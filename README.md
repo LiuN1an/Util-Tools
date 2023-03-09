@@ -37,7 +37,7 @@ You can extend modal using `props: type` and use it in your project everywhere
 
 It is used in pagination when scrolling
 
-#### Moved Wrapper Component
+### Moved Wrapper Component
 
 A component could be moved
 
