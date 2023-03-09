@@ -54,6 +54,6 @@ A Simple SWR, it can cache last response for specify request.
 
 This is a container for managing progress of any activity, and any caller can register and subscribe to any 'progress source' corresponding to a key.
 
-### Temperay Context Provider
+### Temporary Context Provider
 
 This is a patch for any project, it could be used to store deeply nested component's local state and apply it to other components.
