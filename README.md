@@ -37,7 +37,7 @@ You can extend modal using `props: type` and use it in your project everywhere
 
 It is used in pagination when scrolling
 
-#### Moved Wrapper Component
+### Moved Wrapper Component
 
 A component could be moved
 
@@ -53,3 +53,7 @@ A Simple SWR, it can cache last response for specify request.
 ### Progress Container
 
 This is a container for managing progress of any activity, and any caller can register and subscribe to any 'progress source' corresponding to a key.
+
+### Temporary Context Provider
+
+This is a patch for any project, it could be used to store deeply nested component's local state and apply it to other components.
