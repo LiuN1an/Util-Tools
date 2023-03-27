@@ -2,6 +2,8 @@ import React, { useContext, FC, PropsWithChildren } from "react";
 import axios from "axios";
 
 export class CacheRequest {
+  private _requesting: Map<string, Promise<unknown>> = new Map();
+
   private _result: Map<string, any> = new Map();
 
   private _counter: Map<string, number> = new Map();
@@ -16,10 +18,34 @@ export class CacheRequest {
     this.timeout = number;
   }
 
+  public refresh(url: string) {
+    if (this._result.has(url)) {
+      this._result.delete(url);
+    }
+  }
+
+  public pend() {
+    let resolve, reject;
+    const pend = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { resolve, reject, pend };
+  }
+
   public async get<T>(
     props: { url: string; query?: Record<string, unknown> },
     forceRequest = false
   ): Promise<T> {
+    if (this._requesting.has(props.url)) {
+      const pend = this._requesting.get(props.url);
+      await pend;
+      const result = this._result.get(props.url);
+      this._requesting.delete(props.url);
+      if (result) {
+        return result.data as T;
+      }
+    }
     if (this._result.has(props.url)) {
       if (forceRequest) {
         const result = await axios.get(props.url, { params: props.query });
@@ -41,9 +67,12 @@ export class CacheRequest {
         }
       }
     } else {
+      const { resolve, reject, pend } = this.pend();
+      this._requesting.set(props.url, pend);
       this._counter.set(props.url, Date.now());
       const result = await axios.get(props.url, { params: props.query });
       this._result.set(props.url, result.data);
+      resolve();
       return result.data as T;
     }
   }
@@ -52,6 +81,15 @@ export class CacheRequest {
     props: { url: string; data?: Record<string, unknown> },
     forceRequest = false
   ): Promise<T> {
+    if (this._requesting.has(props.url)) {
+      const pend = this._requesting.get(props.url);
+      await pend;
+      const result = this._result.get(props.url);
+      this._requesting.delete(props.url);
+      if (result) {
+        return result as T;
+      }
+    }
     if (this._result.has(props.url)) {
       if (forceRequest) {
         const result = await axios.post(props.url, { data: props.data });
@@ -71,9 +109,12 @@ export class CacheRequest {
         }
       }
     } else {
+      const { resolve, reject, pend } = this.pend();
+      this._requesting.set(props.url, pend);
       this._counter.set(props.url, Date.now());
       const result = await axios.post(props.url, { data: props.data });
       this._result.set(props.url, result.data);
+      resolve();
       return result.data as T;
     }
   }
