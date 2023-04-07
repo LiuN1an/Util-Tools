@@ -1,1 +1,1 @@
-export * from "./fade.js";
+export * from "./modal";

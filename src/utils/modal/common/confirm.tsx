@@ -1,4 +1,4 @@
-import Button from "@mui/material/Button";
+import { Button } from "@chakra-ui/react";
 import React, { FC } from "react";
 import { BaseModalProps, PropsModal } from "./type";
 

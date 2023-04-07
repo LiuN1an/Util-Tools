@@ -43,7 +43,7 @@ export class CacheRequest {
       const result = this._result.get(props.url);
       this._requesting.delete(props.url);
       if (result) {
-        return result.data as T;
+        return result as T;
       }
     }
     if (this._result.has(props.url)) {
