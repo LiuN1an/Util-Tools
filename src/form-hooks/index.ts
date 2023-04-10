@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import cloneDeep from "lodash.clonedeep";
+
+export const generateId = () => Math.random().toString(10).slice(2);
 
 type FormType<T, P> = {
   value: T[];
@@ -10,6 +11,7 @@ type FormType<T, P> = {
     current: ItemType<T, P>;
     index: number;
   }) => Promise<ItemType<T, P>>;
+  whenChanged?: () => void;
 };
 
 export type ItemType<T, P> = {
@@ -19,14 +21,16 @@ export type ItemType<T, P> = {
   errorFields: Record<string, any>;
 } & P;
 
-const generateId = () => {
-  return Math.random().toString(10);
-};
-
 export const useForm = <T, P extends Record<string, any>>(
   props: FormType<T, P>
 ) => {
-  const { value, defaultValue = {}, extraValue = {}, validate } = props;
+  const {
+    value,
+    defaultValue = {},
+    extraValue = {},
+    validate,
+    whenChanged,
+  } = props;
   const [newValue, setValue] = useState<ItemType<T, P>[]>(
     Array.isArray(value) && value.length
       ? value.map(
@@ -50,6 +54,24 @@ export const useForm = <T, P extends Record<string, any>>(
         ] as ItemType<T, P>[])
   );
 
+  const replace = useCallback(
+    (newValue: T[]) => {
+      setValue(
+        newValue.map(
+          (item, index) =>
+            ({
+              id: generateId(),
+              value: item,
+              index,
+              errorFields: {},
+              ...extraValue,
+            } as unknown as ItemType<T, P>)
+        )
+      );
+    },
+    [setValue]
+  );
+
   const resetError = useCallback((field: string, index = 0) => {
     setValue((items) => {
       delete items[index].errorFields[field];
@@ -71,12 +93,11 @@ export const useForm = <T, P extends Record<string, any>>(
           result.push({ ...afterValidateItem });
         }
         setValue(result);
-        return result.every((item) => {
-          return (
+        return result.every(
+          (item) =>
             Object.keys(item.errorFields).length === 0 ||
             Object.values(item.errorFields).every((v) => !v)
-          );
-        });
+        );
       } else {
         return true;
       }
@@ -100,15 +121,16 @@ export const useForm = <T, P extends Record<string, any>>(
       index = 0
     ) => {
       setValue((v) => {
-        const newValue = cloneDeep(v[index].value);
+        const cloneValue = structuredClone(v[index].value);
         const { value, ...rest } = v[index];
-        const passedValue = { ...rest, value: newValue } as ItemType<T, P>;
-        fn({ item: passedValue, items: v });
-        v[index] = passedValue;
+        const passed = { ...rest, value: cloneValue } as ItemType<T, P>;
+        fn({ item: passed, items: v });
+        v[index] = passed;
         return [...v];
       });
+      whenChanged?.();
     },
-    [setValue, newValue]
+    [setValue]
   );
 
   const onAdd = useCallback(
@@ -123,6 +145,7 @@ export const useForm = <T, P extends Record<string, any>>(
         });
         return [...v];
       });
+      whenChanged?.();
     },
     [setValue]
   );
@@ -133,6 +156,7 @@ export const useForm = <T, P extends Record<string, any>>(
         v.splice(index, 1);
         return [...v];
       });
+      whenChanged?.();
     },
     [setValue]
   );
@@ -148,20 +172,39 @@ export const useForm = <T, P extends Record<string, any>>(
         const insertOne = items.splice(source, 1);
         items.splice(destination, 0, insertOne[0]);
         setValue([...items]);
+        whenChanged?.();
         return items;
       }
     },
     [newValue]
   );
 
+  const clean = useCallback((defaultOne?: any) => {
+    setValue(
+      defaultOne
+        ? [
+            {
+              id: generateId(),
+              value: defaultOne,
+              index: 0,
+              errorFields: {},
+              ...extraValue,
+            } as any,
+          ]
+        : []
+    );
+  }, []);
+
   return {
     validate: internalValidate,
     errors,
     resetError,
     value: newValue,
+    replace,
     onChange,
     onRemove,
     onAdd,
     onRemoveAndInsert,
+    clean,
   };
 };

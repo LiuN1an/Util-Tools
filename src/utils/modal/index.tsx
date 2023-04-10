@@ -17,7 +17,6 @@ import {
 import classnames from "classnames";
 import { ChakraProvider } from "@chakra-ui/react";
 import { useMobile } from "../hooks";
-import { DataProvider } from "@/models/export";
 
 export const useTailWindFade = (option: { open: boolean }) => {
   const [open, setOpen] = useState(option.open || false);
@@ -76,7 +75,7 @@ export const createEscape = (props: {
   root = createRoot(escapeNode);
   root.render(
     <ChakraProvider>
-      <DataProvider>{Child}</DataProvider>
+      {Child}
     </ChakraProvider>
   );
 };
