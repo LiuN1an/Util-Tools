@@ -152,3 +152,16 @@ export const getStorage = (key: string, isSession = false) => {
     return localStorage.getItem(key);
   }
 };
+
+export const setStorage = (
+    key: string,
+    value: string,
+    isSession = false
+  ) => {
+    if (isSession) {
+      sessionStorage.setItem(key, value);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  };
+  
