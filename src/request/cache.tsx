@@ -1,7 +1,15 @@
+import EventEimtter from "events";
 import React, { useContext, FC, PropsWithChildren } from "react";
-import axios from "axios";
+import { post as originPost, get as originGet } from "./index";
 
+/**
+ * TODO:
+ * 1、缓存涉及到固定url以及payload组合起来的请求结果
+ * 2、提供上述结果的刷新机制
+ */
 export class CacheRequest {
+  private _event = new EventEimtter();
+
   private _requesting: Map<string, Promise<unknown>> = new Map();
 
   private _result: Map<string, any> = new Map();
@@ -18,10 +26,22 @@ export class CacheRequest {
     this.timeout = number;
   }
 
-  public refresh(url: string) {
+  public delete(url: string) {
     if (this._result.has(url)) {
       this._result.delete(url);
     }
+  }
+
+  public refresh(url: string) {
+    this.delete(url);
+    this._event.emit("refresh", { url });
+  }
+
+  public onRefresh(fn) {
+    this._event.on("refresh", fn);
+    return () => {
+      this._event.off("refresh", fn);
+    };
   }
 
   public pend() {
@@ -34,7 +54,11 @@ export class CacheRequest {
   }
 
   public async get<T>(
-    props: { url: string; query?: Record<string, unknown> },
+    props: {
+      url: string;
+      params?: Record<string, unknown>;
+      template?: Record<string, string>;
+    },
     forceRequest = false
   ): Promise<T> {
     if (this._requesting.has(props.url)) {
@@ -48,10 +72,18 @@ export class CacheRequest {
     }
     if (this._result.has(props.url)) {
       if (forceRequest) {
-        const result = await axios.get(props.url, { params: props.query });
-        this._counter.set(props.url, Date.now());
-        this._result.set(props.url, result.data);
-        return result.data as T;
+        const result = await originGet({
+          url: props.url,
+          params: props.params,
+          template: props.template,
+        });
+        if (result.data) {
+          this._counter.set(props.url, Date.now());
+          this._result.set(props.url, result.data);
+          return result.data as T;
+        } else {
+          throw Error(JSON.stringify(result));
+        }
       } else {
         const lastTime = this._counter.get(props.url);
         const nowTime = Date.now();
@@ -59,8 +91,10 @@ export class CacheRequest {
           return this._result.get(props.url);
         } else {
           this._counter.set(props.url, nowTime);
-          const result = await axios.get(props.url, {
-            params: props.query,
+          const result = await originGet({
+            url: props.url,
+            params: props.params,
+            template: props.template,
           });
           this._result.set(props.url, result.data);
           return result.data as T;
@@ -69,11 +103,23 @@ export class CacheRequest {
     } else {
       const { resolve, reject, pend } = this.pend();
       this._requesting.set(props.url, pend);
-      this._counter.set(props.url, Date.now());
-      const result = await axios.get(props.url, { params: props.query });
-      this._result.set(props.url, result.data);
-      resolve();
-      return result.data as T;
+      const result = await originGet({
+        url: props.url,
+        params: props.params,
+        template: props.template,
+      });
+      setTimeout(() => {
+        this._requesting.delete(props.url);
+      }, 500);
+      if (result.data) {
+        this._counter.set(props.url, Date.now());
+        this._result.set(props.url, result.data);
+        resolve();
+        return result.data as T;
+      } else {
+        reject(result.message);
+        throw Error(JSON.stringify(result));
+      }
     }
   }
 
@@ -92,10 +138,17 @@ export class CacheRequest {
     }
     if (this._result.has(props.url)) {
       if (forceRequest) {
-        const result = await axios.post(props.url, { data: props.data });
-        this._counter.set(props.url, Date.now());
-        this._result.set(props.url, result.data);
-        return result.data as T;
+        const result = await originPost({
+          url: props.url,
+          data: props.data,
+        });
+        if (result.data) {
+          this._counter.set(props.url, Date.now());
+          this._result.set(props.url, result.data);
+          return result.data as T;
+        } else {
+          throw Error(JSON.stringify(result));
+        }
       } else {
         const lastTime = this._counter.get(props.url);
         const nowTime = Date.now();
@@ -103,7 +156,10 @@ export class CacheRequest {
           return this._result.get(props.url);
         } else {
           this._counter.set(props.url, nowTime);
-          const result = await axios.post(props.url, { data: props.data });
+          const result = await originPost({
+            url: props.url,
+            data: props.data,
+          });
           this._result.set(props.url, result.data);
           return result.data as T;
         }
@@ -111,11 +167,22 @@ export class CacheRequest {
     } else {
       const { resolve, reject, pend } = this.pend();
       this._requesting.set(props.url, pend);
-      this._counter.set(props.url, Date.now());
-      const result = await axios.post(props.url, { data: props.data });
-      this._result.set(props.url, result.data);
-      resolve();
-      return result.data as T;
+      const result = await originPost({
+        url: props.url,
+        data: props.data,
+      });
+      setTimeout(() => {
+        this._requesting.delete(props.url);
+      }, 500);
+      if (result.data) {
+        this._counter.set(props.url, Date.now());
+        this._result.set(props.url, result.data);
+        resolve();
+        return result.data as T;
+      } else {
+        reject(result.message);
+        throw Error(JSON.stringify(result));
+      }
     }
   }
 }
@@ -138,3 +205,65 @@ export const CacheRequestProvider: FC<
     </CacheStore.Provider>
   );
 };
+
+export async function postWithoutThrow<T>(
+  props: {
+    url: string;
+    data?: Record<string, unknown>;
+    onOk?: (data: T) => void | Promise<void>;
+    onError?: (props: {
+      code: number;
+      data: T;
+      message: string;
+    }) => void | Promise<void>;
+  },
+  noCache = false
+) {
+  const { url, data, onOk, onError } = props;
+  try {
+    const result = await cacheInstance.post<T>(
+      {
+        url,
+        data,
+      },
+      noCache
+    );
+    onOk?.(result);
+  } catch (e) {
+    try {
+      const response = JSON.parse(e.message);
+      onError?.(response);
+    } catch {}
+  }
+}
+
+export async function getWithoutThrow<T>(
+  props: {
+    url: string;
+    params?: Record<string, unknown>;
+    onOk?: (data: T) => void | Promise<void>;
+    onError?: (props: {
+      code: number;
+      data: T;
+      message: string;
+    }) => void | Promise<void>;
+  },
+  noCache = false
+) {
+  const { url, params, onOk, onError } = props;
+  try {
+    const result = await cacheInstance.get<T>(
+      {
+        url,
+        params,
+      },
+      noCache
+    );
+    onOk?.(result);
+  } catch (e) {
+    try {
+      const response = JSON.parse(e.message);
+      onError?.(response);
+    } catch {}
+  }
+}
