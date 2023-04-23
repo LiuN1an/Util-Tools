@@ -2,6 +2,12 @@ import EventEimtter from "events";
 import React, { useContext, FC, PropsWithChildren } from "react";
 import { post as originPost, get as originGet } from "./index";
 
+export type CachePost = {};
+
+export type CacheRequestConfig = {
+  forceRequest?: boolean;
+  sameAbort?: boolean;
+};
 /**
  * TODO:
  * 1、缓存涉及到固定url以及payload组合起来的请求结果
@@ -59,9 +65,18 @@ export class CacheRequest {
       params?: Record<string, unknown>;
       template?: Record<string, string>;
     },
-    forceRequest = false
+    config: CacheRequestConfig
   ): Promise<T> {
+    const { forceRequest = false, sameAbort = false } = config || {};
     if (this._requesting.has(props.url)) {
+      if (sameAbort) {
+        throw Error(
+          JSON.stringify({
+            code: -1,
+            message: "sameAbort",
+          })
+        );
+      }
       const pend = this._requesting.get(props.url);
       await pend;
       const result = this._result.get(props.url);
@@ -125,9 +140,18 @@ export class CacheRequest {
 
   public async post<T>(
     props: { url: string; data?: Record<string, unknown> },
-    forceRequest = false
+    config: CacheRequestConfig
   ): Promise<T> {
+    const { forceRequest = false, sameAbort = false } = config || {};
     if (this._requesting.has(props.url)) {
+      if (sameAbort) {
+        throw Error(
+          JSON.stringify({
+            code: -1,
+            message: "sameAbort",
+          })
+        );
+      }
       const pend = this._requesting.get(props.url);
       await pend;
       const result = this._result.get(props.url);
@@ -217,7 +241,7 @@ export async function postWithoutThrow<T>(
       message: string;
     }) => void | Promise<void>;
   },
-  noCache = false
+  noCache?: CacheRequestConfig
 ) {
   const { url, data, onOk, onError } = props;
   try {
@@ -248,7 +272,7 @@ export async function getWithoutThrow<T>(
       message: string;
     }) => void | Promise<void>;
   },
-  noCache = false
+  noCache?: CacheRequestConfig
 ) {
   const { url, params, onOk, onError } = props;
   try {
