@@ -48,7 +48,7 @@ You can pass the `HTMLElement` and get a auto positioned dropdown modal. And it 
 
 ### Cache Request
 
-A Simple SWR, it can cache last response for specify request.
+A Simple SWR, it can cache last response for specify request. It also provide the wrapper of GET/POST, it could be merged with the custom post/get function
 
 ### Progress Container
 
