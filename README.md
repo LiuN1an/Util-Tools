@@ -57,3 +57,5 @@ This is a container for managing progress of any activity, and any caller can re
 ### Temporary Context Provider
 
 This is a patch for any project, it could be used to store deeply nested component's local state and apply it to other components.
+
+### Limit Provider
