@@ -1,5 +1,6 @@
 import EventEimtter from "events";
 import React, { useContext, FC, PropsWithChildren } from "react";
+import { mapHashIdByObj } from "src/utils/hashID";
 import { post as originPost, get as originGet } from "./index";
 
 export type CachePost = {};
@@ -24,8 +25,14 @@ export class CacheRequest {
 
   private timeout = 0;
 
-  constructor(options?: { timeout: number }) {
+  private _process;
+
+  constructor(options?: {
+    timeout: number;
+    resultProcess?: () => boolean | Promise<boolean>; // 这里和下面的TODO对应，可以自定义结果处理函数
+  }) {
     this.timeout = options?.timeout;
+    this._process = options?.resultProcess;
   }
 
   public setTimeout(number: number) {
@@ -68,7 +75,8 @@ export class CacheRequest {
     config: CacheRequestConfig
   ): Promise<T> {
     const { forceRequest = false, sameAbort = false } = config || {};
-    if (this._requesting.has(props.url)) {
+    const [{ hashId }] = await mapHashIdByObj([props], ["url", "params"]);
+    if (this._requesting.has(hashId)) {
       if (sameAbort) {
         throw Error(
           JSON.stringify({
@@ -77,15 +85,15 @@ export class CacheRequest {
           })
         );
       }
-      const pend = this._requesting.get(props.url);
+      const pend = this._requesting.get(hashId);
       await pend;
-      const result = this._result.get(props.url);
-      this._requesting.delete(props.url);
+      const result = this._result.get(hashId);
+      this._requesting.delete(hashId);
       if (result) {
         return result as T;
       }
     }
-    if (this._result.has(props.url)) {
+    if (this._result.has(hashId)) {
       if (forceRequest) {
         const result = await originGet({
           url: props.url,
@@ -93,42 +101,42 @@ export class CacheRequest {
           template: props.template,
         });
         if (result.data) {
-          this._counter.set(props.url, Date.now());
-          this._result.set(props.url, result.data);
+          this._counter.set(hashId, Date.now());
+          this._result.set(hashId, result.data);
           return result.data as T;
         } else {
           throw Error(JSON.stringify(result));
         }
       } else {
-        const lastTime = this._counter.get(props.url);
+        const lastTime = this._counter.get(hashId);
         const nowTime = Date.now();
         if (nowTime - lastTime < this.timeout) {
-          return this._result.get(props.url);
+          return this._result.get(hashId);
         } else {
-          this._counter.set(props.url, nowTime);
+          this._counter.set(hashId, nowTime);
           const result = await originGet({
             url: props.url,
             params: props.params,
             template: props.template,
           });
-          this._result.set(props.url, result.data);
+          this._result.set(hashId, result.data);
           return result.data as T;
         }
       }
     } else {
       const { resolve, reject, pend } = this.pend();
-      this._requesting.set(props.url, pend);
+      this._requesting.set(hashId, pend);
       const result = await originGet({
         url: props.url,
         params: props.params,
         template: props.template,
       });
       setTimeout(() => {
-        this._requesting.delete(props.url);
+        this._requesting.delete(hashId);
       }, 500);
       if (result.data) {
-        this._counter.set(props.url, Date.now());
-        this._result.set(props.url, result.data);
+        this._counter.set(hashId, Date.now());
+        this._result.set(hashId, result.data);
         resolve();
         return result.data as T;
       } else {
@@ -143,7 +151,8 @@ export class CacheRequest {
     config: CacheRequestConfig
   ): Promise<T> {
     const { forceRequest = false, sameAbort = false } = config || {};
-    if (this._requesting.has(props.url)) {
+    const [{ hashId }] = await mapHashIdByObj([props], ["url", "data"]);
+    if (this._requesting.has(hashId)) {
       if (sameAbort) {
         throw Error(
           JSON.stringify({
@@ -152,55 +161,50 @@ export class CacheRequest {
           })
         );
       }
-      const pend = this._requesting.get(props.url);
+      const pend = this._requesting.get(hashId);
       await pend;
-      const result = this._result.get(props.url);
-      this._requesting.delete(props.url);
+      const result = this._result.get(hashId);
+      this._requesting.delete(hashId);
       if (result) {
         return result as T;
       }
     }
-    if (this._result.has(props.url)) {
+    if (this._result.has(hashId)) {
       if (forceRequest) {
         const result = await originPost({
           url: props.url,
           data: props.data,
         });
         if (result.data) {
-          this._counter.set(props.url, Date.now());
-          this._result.set(props.url, result.data);
+          // TODO: 这里可以外置一些判断条件给不同项目复用
+          this._counter.set(hashId, Date.now());
+          this._result.set(hashId, result.data);
           return result.data as T;
         } else {
           throw Error(JSON.stringify(result));
         }
       } else {
-        const lastTime = this._counter.get(props.url);
+        const lastTime = this._counter.get(hashId);
         const nowTime = Date.now();
         if (nowTime - lastTime < this.timeout) {
-          return this._result.get(props.url);
+          return this._result.get(hashId);
         } else {
-          this._counter.set(props.url, nowTime);
-          const result = await originPost({
-            url: props.url,
-            data: props.data,
-          });
-          this._result.set(props.url, result.data);
+          this._counter.set(hashId, nowTime);
+          const result = await originPost(props);
+          this._result.set(hashId, result.data);
           return result.data as T;
         }
       }
     } else {
       const { resolve, reject, pend } = this.pend();
-      this._requesting.set(props.url, pend);
-      const result = await originPost({
-        url: props.url,
-        data: props.data,
-      });
+      this._requesting.set(hashId, pend);
+      const result = await originPost(props);
       setTimeout(() => {
-        this._requesting.delete(props.url);
+        this._requesting.delete(hashId);
       }, 500);
       if (result.data) {
-        this._counter.set(props.url, Date.now());
-        this._result.set(props.url, result.data);
+        this._counter.set(hashId, Date.now());
+        this._result.set(hashId, result.data);
         resolve();
         return result.data as T;
       } else {
