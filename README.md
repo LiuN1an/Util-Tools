@@ -59,3 +59,7 @@ This is a container for managing progress of any activity, and any caller can re
 This is a patch for any project, it could be used to store deeply nested component's local state and apply it to other components.
 
 ### Limit Provider
+Provide a framework to deal with the limitation in the frontend. It use the localStorage to store rest counts and expire date. It support the total count number(default: 10) and expired hours(default: 24)
+
+### Imperative Modal
+Use react portal to dynamic make a new modal, it's necessary to use a common modal component. It could be used in mini-program

@@ -65,7 +65,7 @@ export class Limit {
     }
   }
 
-  public comsume(props?: { resetTime?: boolean }) {
+  public consume(props?: { resetTime?: boolean }) {
     const { resetTime = false } = props || {};
     this.count--;
     if (isBrowser()) {
