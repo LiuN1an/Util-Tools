@@ -14,7 +14,6 @@ type ModalItemProps = {
   component: FC;
 };
 
-let existModals: ModalItemProps[] | null = null;
 let changeModals: Dispatch<SetStateAction<ModalItemProps[]>> | null = null;
 
 const Portal = () => {
@@ -24,7 +23,6 @@ const Portal = () => {
 
   useEffect(() => {
     changeModals = setModals;
-    existModals = modals;
   }, [setModals, modals]);
 
   return (
@@ -58,9 +56,7 @@ const ModalWrapper = (props: ModalProps & { key: string }) => {
     <Modal {...props} isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalBody>
           <Render onClose={onClose} />
-        </ModalBody>
       </ModalContent>
     </Modal>
   );
