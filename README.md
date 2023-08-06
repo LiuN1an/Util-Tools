@@ -63,3 +63,6 @@ Provide a framework to deal with the limitation in the frontend. It use the loca
 
 ### Imperative Modal
 Use react portal to dynamic make a new modal, it's necessary to use a common modal component. It could be used in mini-program
+
+## Retry Image
+The component will always retry image request to confirm it could load the whole image (using the default cache in browser), if it is not ready, it will show the loading render
