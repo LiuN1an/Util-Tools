@@ -2,9 +2,21 @@ import React, { FC, useEffect, useRef } from "react";
 
 export interface ObserverProps {
   whenTrigger?: () => Promise<void>;
+  bottom?: number;
+  top?: number;
+  enableBottom?: boolean;
+  enableTop?: boolean;
+  className?: string;
 }
 
-export const Observer: FC<ObserverProps> = ({ whenTrigger }) => {
+const Observer: FC<ObserverProps> = ({
+  whenTrigger,
+  className = "",
+  bottom = 500,
+  top = 150,
+  enableTop = false,
+  enableBottom = false,
+}) => {
   const observerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +39,23 @@ export const Observer: FC<ObserverProps> = ({ whenTrigger }) => {
     <div
       ref={observerRef}
       data-x="sensor"
-      style={{ width: "100%", height: "1px" }}
+      className={className}
+      style={{
+        width: "100%",
+        height: "1px",
+        ...(enableTop
+          ? {
+              top: `${top}px`,
+            }
+          : {}),
+        ...(enableBottom
+          ? {
+              bottom: `${bottom}px`,
+            }
+          : {}),
+      }}
     />
   );
 };
+
+export default Observer;
