@@ -1,6 +1,9 @@
+import debounce from "lodash.debounce";
 import { useState, useCallback } from "react";
+import cloneDeep from "lodash.clonedeep";
 
-export const generateId = () => Math.random().toString(10).slice(2);
+export const generateId = () =>
+  Math.random().toString(10).slice(2) + Date.now().toString();
 
 type FormType<T, P> = {
   value: T[];
@@ -68,8 +71,9 @@ export const useForm = <T, P extends Record<string, any>>(
             } as unknown as ItemType<T, P>)
         )
       );
+      whenChanged?.();
     },
-    [setValue]
+    [setValue, whenChanged]
   );
 
   const resetError = useCallback((field: string, index = 0) => {
@@ -114,14 +118,11 @@ export const useForm = <T, P extends Record<string, any>>(
 
   const onChange = useCallback(
     (
-      fn: (props: {
-        item: ItemType<T, P>;
-        items: ItemType<T, P>[];
-      }) => void,
+      fn: (props: { item: ItemType<T, P>; items: ItemType<T, P>[] }) => void,
       index = 0
     ) => {
       setValue((v) => {
-        const cloneValue = structuredClone(v[index].value);
+        const cloneValue = cloneDeep(v[index].value); // some browsers are not compatible
         const { value, ...rest } = v[index];
         const passed = { ...rest, value: cloneValue } as ItemType<T, P>;
         fn({ item: passed, items: v });
@@ -195,6 +196,18 @@ export const useForm = <T, P extends Record<string, any>>(
     );
   }, []);
 
+  const debounceSetValue = debounce(
+    (field: unknown, value: unknown, index = 0) => {
+      onChange(({ item }) => {
+        (item.value as any)[field as any] = value;
+      }, index);
+    },
+    300,
+    {
+      trailing: true,
+    }
+  );
+
   return {
     validate: internalValidate,
     errors,
@@ -202,6 +215,7 @@ export const useForm = <T, P extends Record<string, any>>(
     value: newValue,
     replace,
     onChange,
+    debounceSetValue,
     onRemove,
     onAdd,
     onRemoveAndInsert,
