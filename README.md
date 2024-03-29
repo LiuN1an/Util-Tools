@@ -66,3 +66,6 @@ Use react portal to dynamic make a new modal, it's necessary to use a common mod
 
 ## Retry Image
 The component will always retry image request to confirm it could load the whole image (using the default cache in browser), if it is not ready, it will show the loading render
+
+### FormEngine
+Which could setup a form by simple config like DSL or directive function call
