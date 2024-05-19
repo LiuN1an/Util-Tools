@@ -73,7 +73,6 @@ export const useRetry = (
   };
 };
 
-
 /**
  * 一个进度追踪钩子
  * 传入进度的最大值和最小值以及每一进度增长的步长
@@ -121,4 +120,69 @@ export const useCounter = (props?: {
     count: _count,
     start,
   };
+};
+
+export const useListenIntersection = (fn) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.intersectionRatio >= 0.75) {
+              fn(true);
+            } else {
+              fn(false);
+            }
+          });
+        },
+        {
+          threshold: 0.75,
+        }
+      );
+
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+
+      return () => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      };
+    }
+  }, [ref.current]);
+
+  return ref;
+};
+
+export const useMediaQuery = (query, defaultMatches = true) => {
+  const [matches, setMatches] = useState(defaultMatches);
+
+  const canMatch =
+    typeof window !== "undefined" && typeof window.matchMedia === "function";
+
+  const queryMatches = useCallback(() => {
+    const mediaQuery = window.matchMedia(query);
+    setMatches(!!mediaQuery.matches);
+  }, [query]);
+
+  useEffect(() => {
+    if (!canMatch) {
+      return;
+    }
+
+    queryMatches();
+
+    const mediaQuery = window.matchMedia(query);
+
+    mediaQuery.addListener(queryMatches);
+
+    return () => {
+      mediaQuery.removeListener(queryMatches);
+    };
+  }, [query, canMatch, queryMatches]);
+
+  return matches;
 };
